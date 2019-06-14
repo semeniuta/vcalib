@@ -192,16 +192,6 @@ def all_images_reprojection_error_for_subsets(indices_subset_gen, runner_prepare
         rms_list_1.append(rms1)
         rms_list_2.append(rms2)
         
-        """
-        p3d = geometry.triangulate_points(
-            runner_calib['P1'],
-            runner_calib['P2'],
-            runner_prepare['image_points_1'][0],
-            runner_prepare['image_points_2'][0]
-        )
-        print(np.linalg.norm(p3d[0] - p3d[1]))
-        """
-        
     return np.array(rms_list_1), np.array(rms_list_2)
 
 
@@ -221,22 +211,6 @@ def triangulate_impoints(P1, P2, impoints_1, impoints_2):
         
     return points_3d_list
 
-
-"""
-class StereoCalibEval:
-    
-    def __init__(self, params_calib):
-        self._runner_calib = create_runner_stereocalib(params_calib)
-        self.prepare()
-        
-    def ():
-        
-    
-
-def calibrate_per_subset_and_eval(indices_subset_gen, runner_prepare, proc_func):
-    
-    for indices_subset in indices_subset_gen:
-"""  
 
 def cb_row_by_row(pattern_size, arr):
     
