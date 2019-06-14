@@ -138,33 +138,35 @@ def all_images_reprojection_error_for_subsets(indices_subset_gen, runner_prepare
     
     rms_list_1 = []
     rms_list_2 = []
+    
+    # for all images
+    impoints_1 = runner_prepare['image_points_1']
+    impoints_2 = runner_prepare['image_points_2']
+    pattern_points = runner_prepare['pattern_points']
+    object_points = cbcalib.make_list_of_identical_pattern_points(len(impoints_1), pattern_points)
 
     for indices_subset in indices_subset_gen:
-
-        # for all images
-        impoints_1 = runner_prepare['image_points_1']
-        impoints_2 = runner_prepare['image_points_2']
-        object_points = runner_prepare['object_points']
         
         def multiple_pnp(impoints, cm, dc): # capturing object_points
             
             rvecs = []
             tvecs = []
-            
-            op = object_points[0] # all entries are the same
-            
+                        
             for imp in impoints:
-                _, rvec, tvec = cv2.solvePnP(op, imp, cm, dc) 
+                _, rvec, tvec = cv2.solvePnP(pattern_points, imp, cm, dc) 
                 rvecs.append(rvec)
                 tvecs.append(tvec)
             
             return rvecs, tvecs
-        
-        images_1, images_2 = open_images_subset_stereo(imfiles_1, imfiles_2, indices_subset)
+                
+        imp_1 = [impoints_1[idx] for idx in indices_subset]
+        imp_2 = [impoints_2[idx] for idx in indices_subset]
+        obp = cbcalib.make_list_of_identical_pattern_points(len(indices_subset), pattern_points)
 
         runner_calib.run(
-            calibration_images_1=images_1,
-            calibration_images_2=images_2
+            image_points_1=imp_1,
+            image_points_2=imp_2,
+            object_points=obp
         )
         
         cm1 = runner_calib['cm_1']
