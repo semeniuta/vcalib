@@ -203,3 +203,114 @@ def all_images_reprojection_error_for_subsets(indices_subset_gen, runner_prepare
         """
         
     return np.array(rms_list_1), np.array(rms_list_2)
+
+
+def create_runner_stereocalib(params):
+    cg = cbcalib.CGCalibrateStereoBase()
+    return CompGraphRunner(cg, params)     
+       
+
+def triangulate_impoints(P1, P2, impoints_1, impoints_2):
+    
+    points_3d_list = []
+    
+    for imp_1, imp_2 in zip(impoints_1, impoints_2):
+
+        points_3d = geometry.triangulate_points(P1, P2, imp_1, imp_2)
+        points_3d_list.append(points_3d)
+        
+    return points_3d_list
+
+
+"""
+class StereoCalibEval:
+    
+    def __init__(self, params_calib):
+        self._runner_calib = create_runner_stereocalib(params_calib)
+        self.prepare()
+        
+    def ():
+        
+    
+
+def calibrate_per_subset_and_eval(indices_subset_gen, runner_prepare, proc_func):
+    
+    for indices_subset in indices_subset_gen:
+"""  
+
+def cb_row_by_row(pattern_size, arr):
+    
+    n_cols, n_rows = pattern_size
+    
+    assert len(arr) == (n_cols * n_rows)
+    
+    idx = 0
+    
+    for i in range(n_rows):
+        start = i * n_cols
+        end = start + n_cols
+        yield start, end
+        
+        
+def measure_cb_distances_in_rows(points_3d, pattern_size):
+    
+    distances = []
+    
+    for start, end in cb_row_by_row(pattern_size, points_3d):
+        
+        row_points = points_3d[start:end]
+        
+        for i in range(len(row_points) - 1):
+            p1 = row_points[i]
+            p2 = row_points[i + 1]
+            dist = np.linalg.norm(p1 - p2)
+            distances.append(dist)
+            
+    return np.array(distances)
+        
+
+def all_images_triangulate_for_subsets(indices_subset_gen, runner_prepare, runner_calib):
+        
+    impoints_1 = runner_prepare['image_points_1']
+    impoints_2 = runner_prepare['image_points_2']
+    pattern_points = runner_prepare['pattern_points']
+    pattern_size = runner_prepare['pattern_size_wh']
+    
+    res = []
+    
+    for indices_subset in indices_subset_gen:
+        
+        run_calib(runner_calib, impoints_1, impoints_2, indices_subset, pattern_points)
+            
+        points_3d_all_images = triangulate_impoints(
+            runner_calib['P1'], 
+            runner_calib['P2'], 
+            runner_prepare['image_points_1'], 
+            runner_prepare['image_points_2']
+        )
+        
+        points_3d_calib_images = triangulate_impoints(
+            runner_calib['P1'], 
+            runner_calib['P2'], 
+            runner_calib['image_points_1'], 
+            runner_calib['image_points_2']
+        )
+       
+        measure = lambda p3d: measure_cb_distances_in_rows(p3d, pattern_size)                           
+        
+        distances_all = [measure(p3d).mean() for p3d in points_3d_all_images]
+        distances_calib = [measure(p3d).mean() for p3d in points_3d_calib_images]
+        
+        res.append(distances_all)
+ 
+    # rows -- calibration runs
+    # cols -- images
+    return np.array(res) 
+
+
+def detect_good_triangulations(res_np, target, tol):
+    
+    bottom = target - tol
+    top = target + tol
+    
+    return(res_np > bottom) & (res_np < top)
