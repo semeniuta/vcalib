@@ -64,3 +64,44 @@ def open_images_subset(imfiles, subset_indices):
         return open_image(imfiles[idx], read_flag=cv2.IMREAD_GRAYSCALE)
     
     return [open_image_gray_by_idx(idx) for idx in subset_indices]
+
+
+def open_images_subset_stereo(imfiles_1, imfiles_2, subset_indices):
+    
+    images_1 = open_images_subset(imfiles_1, subset_indices)
+    images_2 = open_images_subset(imfiles_2, subset_indices)
+    
+    return images_1, images_2
+
+    
+def calibrate_stereo(images_1, images_2):
+    
+    cg = cbcalib.CGCalibrateStereo()
+
+    params = {
+        'im_wh': cbcalib.get_im_wh(images_1[0]),
+        'pattern_size_wh': (9, 7),
+        'square_size': 20.   
+    }
+
+    runner = CompGraphRunner(cg, params)
+    
+    runner.run(calibration_images_1=images_1, calibration_images_2=images_2)
+    
+    return runner
+
+
+def reproject_and_measure_error(image_points, object_points, rvecs, tvecs, cm, dc):
+    
+    reproj_list = []
+    
+    for ip, op, rvec, tvec in zip(image_points, object_points, rvecs, tvecs):
+
+        ip_reprojected = cbcalib.project_points(op, rvec, tvec, cm, dc)
+        reproj_list.append(ip_reprojected)
+        
+    reproj_all = np.concatenate(reproj_list, axis=0)
+    original_all = np.concatenate(image_points, axis=0)
+    
+    rms = cbcalib.reprojection_rms(original_all, reproj_all)
+    return rms
