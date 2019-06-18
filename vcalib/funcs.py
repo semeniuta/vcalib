@@ -4,118 +4,14 @@ import sys
 import numpy as np
 import pandas as pd
 from glob import glob
-from math import factorial
 import itertools
-import random
-from matplotlib import pyplot as plt
 
 from visioncg.io import sorted_glob
-from visioncg.io import open_image
 from visioncg import cbcalib
 from visioncg import geometry
 from epypes.compgraph import CompGraphRunner
 
-
-def glob_images(data_dir, camera_idx):
-    mask = os.path.join(data_dir, 'img_{}_*.jpg'.format(camera_idx))
-    return sorted_glob(mask)
-
-
-def n_choose_k(n, k):
-    return factorial(n) / (factorial(k) * factorial(n - k))
-
-
-def shuffle(x, seed=None):
-    
-    if seed is None:
-        rnd = random.Random() 
-    else:
-        rnd = random.Random(seed) 
-        
-    rnd.shuffle(x)
-    
-    
-def shuffle_indices(n, seed=42):
-    
-    indices = list(range(n))
-    shuffle(indices, seed)
-    
-    return indices
-
-
-def imshow_noaxis(ax, im):
-    ax.imshow(im)
-    ax.axis('off')
-    
-    
-def subsets_sliding(indices, subset_size):
-    
-    total = len(indices)
-    
-    if subset_size > total:
-        raise Exception('subset_size should be less or equal to the size of indices')
-        
-    last = total - subset_size
-        
-    for start in range(0, last + 1):
-        yield indices[start:start+subset_size]
-
-        
-def open_images_all(imfiles):
-    
-    def open_image_gray(im_filename):
-        return open_image(im_filename, read_flag=cv2.IMREAD_GRAYSCALE)
-    
-    return [open_image_gray(imf) for imf in imfiles] 
-    
-      
-def open_images_subset(imfiles, subset_indices):
-    
-    def open_image_gray_by_idx(idx):
-        return open_image(imfiles[idx], read_flag=cv2.IMREAD_GRAYSCALE)
-    
-    return [open_image_gray_by_idx(idx) for idx in subset_indices]
-
-
-def open_images_subset_stereo(imfiles_1, imfiles_2, subset_indices):
-    
-    images_1 = open_images_subset(imfiles_1, subset_indices)
-    images_2 = open_images_subset(imfiles_2, subset_indices)
-    
-    return images_1, images_2
-
-    
-def calibrate_stereo(images_1, images_2):
-    
-    cg = cbcalib.CGCalibrateStereo()
-
-    params = {
-        'im_wh': cbcalib.get_im_wh(images_1[0]),
-        'pattern_size_wh': (9, 7),
-        'square_size': 20.   
-    }
-
-    runner = CompGraphRunner(cg, params)
-    
-    runner.run(calibration_images_1=images_1, calibration_images_2=images_2)
-    
-    return runner
-
-
-def reproject_and_measure_error(image_points, object_points, rvecs, tvecs, cm, dc):
-    
-    reproj_list = []
-    
-    for ip, op, rvec, tvec in zip(image_points, object_points, rvecs, tvecs):
-
-        ip_reprojected = cbcalib.project_points(op, rvec, tvec, cm, dc)
-        reproj_list.append(ip_reprojected)
-        
-    reproj_all = np.concatenate(reproj_list, axis=0)
-    original_all = np.concatenate(image_points, axis=0)
-    
-    rms = cbcalib.reprojection_rms(original_all, reproj_all)
-    return rms
+from .io import open_images_all
 
 
 def prepare_points_for_all_images(runner_prepare, imfiles_1, imfiles_2):
@@ -186,8 +82,8 @@ def all_images_reprojection_error_for_subsets(indices_subset_gen, runner_prepare
         rvecs1, tvecs1 = multiple_pnp(impoints_1, cm1, dc1)
         rvecs2, tvecs2 = multiple_pnp(impoints_2, cm2, dc2)
         
-        rms1 = reproject_and_measure_error(impoints_1, object_points, rvecs1, tvecs1, cm1, dc1)
-        rms2 = reproject_and_measure_error(impoints_2, object_points, rvecs2, tvecs2, cm2, dc2)
+        rms1 = cbcalib.reproject_and_measure_error(impoints_1, object_points, rvecs1, tvecs1, cm1, dc1)
+        rms2 = cbcalib.reproject_and_measure_error(impoints_2, object_points, rvecs2, tvecs2, cm2, dc2)
 
         rms_list_1.append(rms1)
         rms_list_2.append(rms2)
@@ -195,28 +91,14 @@ def all_images_reprojection_error_for_subsets(indices_subset_gen, runner_prepare
     return np.array(rms_list_1), np.array(rms_list_2)
 
 
-def create_runner_stereocalib(params):
-    cg = cbcalib.CGCalibrateStereoBase()
-    return CompGraphRunner(cg, params)     
-       
-
-def triangulate_impoints(P1, P2, impoints_1, impoints_2):
-    
-    points_3d_list = []
-    
-    for imp_1, imp_2 in zip(impoints_1, impoints_2):
-
-        points_3d = geometry.triangulate_points(P1, P2, imp_1, imp_2)
-        points_3d_list.append(points_3d)
-        
-    return points_3d_list
-
-
-def cb_row_by_row(pattern_size, arr):
+def cb_row_by_row(pattern_size):
+    """
+    Generator of pairs of (start, end)
+    indices of a chessboard pattern 
+    per each row. 
+    """
     
     n_cols, n_rows = pattern_size
-    
-    assert len(arr) == (n_cols * n_rows)
     
     idx = 0
     
@@ -229,8 +111,11 @@ def cb_row_by_row(pattern_size, arr):
 def measure_cb_distances_in_rows(points_3d, pattern_size):
     
     distances = []
+
+    n_cols, n_rows = pattern_size
+    assert len(points_3d) == (n_cols * n_rows)
     
-    for start, end in cb_row_by_row(pattern_size, points_3d):
+    for start, end in cb_row_by_row(pattern_size):
         
         row_points = points_3d[start:end]
         
@@ -256,14 +141,14 @@ def all_images_triangulate_for_subsets(indices_subset_gen, runner_prepare, runne
         
         run_calib(runner_calib, impoints_1, impoints_2, indices_subset, pattern_points)
             
-        points_3d_all_images = triangulate_impoints(
+        points_3d_all_images = geometry.triangulate_impoints(
             runner_calib['P1'], 
             runner_calib['P2'], 
             runner_prepare['image_points_1'], 
             runner_prepare['image_points_2']
         )
         
-        points_3d_calib_images = triangulate_impoints(
+        points_3d_calib_images = geometry.triangulate_impoints(
             runner_calib['P1'], 
             runner_calib['P2'], 
             runner_calib['image_points_1'], 
@@ -335,7 +220,7 @@ def analyze_good_tringulations(good):
 
 def select_indices(good_counts, low_threshold=0):
     
-    selected= [] 
+    selected = [] 
     
     counts =  filter(lambda c: c > low_threshold, good_counts.keys())
     
