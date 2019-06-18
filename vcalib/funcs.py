@@ -141,14 +141,14 @@ def all_images_triangulate_for_subsets(indices_subset_gen, runner_prepare, runne
         
         run_calib(runner_calib, impoints_1, impoints_2, indices_subset, pattern_points)
             
-        points_3d_all_images = geometry.triangulate_impoints(
+        points_3d_all_images = cbcalib.triangulate_impoints(
             runner_calib['P1'], 
             runner_calib['P2'], 
             runner_prepare['image_points_1'], 
             runner_prepare['image_points_2']
         )
         
-        points_3d_calib_images = geometry.triangulate_impoints(
+        points_3d_calib_images = cbcalib.triangulate_impoints(
             runner_calib['P1'], 
             runner_calib['P2'], 
             runner_calib['image_points_1'], 
