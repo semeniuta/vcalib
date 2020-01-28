@@ -184,7 +184,7 @@ def detect_good_triangulations(res_np, target, tol):
     bottom = target - tol
     top = target + tol
     
-    return(res_np > bottom) & (res_np < top)
+    return (res_np > bottom) & (res_np < top)
 
 
 def find_best_calib_based_on_triangulations(good):
