@@ -33,7 +33,9 @@ def create_runner_calib(im_wh):
     return CompGraphRunner(cg_calib, params_calib)
     
     
-def run_calib(runner_calib, impoints_1, impoints_2, indices_subset, pattern_points):
+def run_calib(impoints_1, impoints_2, indices_subset, pattern_points, im_wh):
+
+    runner_calib = create_runner_calib(im_wh)
     
     imp_1 = [impoints_1[idx] for idx in indices_subset]
     imp_2 = [impoints_2[idx] for idx in indices_subset]
@@ -44,6 +46,8 @@ def run_calib(runner_calib, impoints_1, impoints_2, indices_subset, pattern_poin
         image_points_2=imp_2,
         object_points=obp
     )
+
+    return runner_calib
         
     
 def all_images_reprojection_error_for_subsets(indices_subset_gen, runner_prepare, im_wh):
@@ -78,11 +82,9 @@ def all_images_reprojection_error_for_subsets(indices_subset_gen, runner_prepare
     
     object_points = cbcalib.make_list_of_identical_pattern_points(len(impoints_1), pattern_points)
 
-    runner_calib = create_runner_calib(im_wh)
-
     for indices_subset in indices_subset_gen:
        
-        run_calib(runner_calib, impoints_1, impoints_2, indices_subset, pattern_points)
+        runner_calib = run_calib(impoints_1, impoints_2, indices_subset, pattern_points, im_wh)
         
         cm1 = runner_calib['cm_1']
         dc1 = runner_calib['dc_1']
@@ -144,14 +146,12 @@ def all_images_triangulate_for_subsets(indices_subset_gen, runner_prepare, im_wh
     impoints_2 = runner_prepare['image_points_2']
     pattern_points = runner_prepare['pattern_points']
     pattern_size = runner_prepare['pattern_size_wh']
-
-    runner_calib = create_runner_calib(im_wh)
     
     res = []
     
     for indices_subset in indices_subset_gen:
         
-        run_calib(runner_calib, impoints_1, impoints_2, indices_subset, pattern_points)
+        runner_calib = run_calib(impoints_1, impoints_2, indices_subset, pattern_points, im_wh)
             
         points_3d_all_images = cbcalib.triangulate_impoints(
             runner_calib['P1'], 
