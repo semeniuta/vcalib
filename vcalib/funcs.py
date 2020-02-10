@@ -262,3 +262,32 @@ def select_indices(good_counts, low_threshold=0):
         selected += good_counts[c]
         
     return selected
+
+
+def pnp_for_each_image_pair(runner_prepare, cm1, dc1, cm2, dc2):
+
+    op = runner_prepare['pattern_points']
+
+    n_images = len(runner_prepare['image_points_1'])
+
+    rvecs_1 = []
+    tvecs_1 = []
+
+    rvecs_2 = []
+    tvecs_2 = []
+
+    for i in range(n_images):
+
+        imp_1 = runner_prepare['image_points_1'][i]
+        imp_2 = runner_prepare['image_points_2'][i]
+
+        _, r1, t1 = cv2.solvePnP(op, imp_1, cm1, dc1)
+        _, r2, t2 = cv2.solvePnP(op, imp_2, cm2, dc2)
+
+        rvecs_1.append(r1.reshape(-1))
+        tvecs_1.append(t1.reshape(-1))
+
+        rvecs_2.append(r2.reshape(-1))
+        tvecs_2.append(t2.reshape(-1))
+
+    return np.array(rvecs_1), np.array(tvecs_1), np.array(rvecs_2), np.array(tvecs_2)
