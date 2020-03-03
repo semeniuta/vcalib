@@ -178,21 +178,11 @@ def all_images_triangulate_for_subsets(calib_runners, runner_prepare):
             ip_1,
             ip_2
         )
-
-        # TODO with undistorted
-        
-        #points_3d_calib_images = cbcalib.triangulate_impoints(
-        #    rcalib['P1'],
-        #    rcalib['P2'],
-        #    rcalib['image_points_1'],
-        #    rcalib['image_points_2']
-        #)
        
         psize = runner_prepare['pattern_size_wh']
         measure = lambda p3d: measure_cb_distances_in_rows(p3d, psize)                           
         
         distances_all = [measure(p3d).mean() for p3d in points_3d_all_images]
-        #distances_calib = [measure(p3d).mean() for p3d in points_3d_calib_images]
         
         res.append(distances_all)
  
