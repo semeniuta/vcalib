@@ -168,9 +168,6 @@ def all_images_triangulate_for_subsets(calib_runners, runner_prepare):
         dc1 = rcalib['dc_1']
         cm2 = rcalib['cm_2']
         dc2 = rcalib['dc_2']
-
-        ip_1_ud = [cbcalib.undistort_points(src, cm1, dc1) for src in ip_1]
-        ip_2_ud = [cbcalib.undistort_points(src, cm2, dc2) for src in ip_2]
                     
         points_3d_all_images = cbcalib.triangulate_impoints(
             rcalib['P1'],
