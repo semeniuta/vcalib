@@ -188,6 +188,30 @@ def all_images_triangulate_for_subsets(calib_runners, runner_prepare):
     return np.array(res) 
 
 
+def triangulate_all(calib_runners, runner_prepare):
+
+    res = []
+
+    ip_1 = runner_prepare['image_points_1']
+    ip_2 = runner_prepare['image_points_2']
+
+    for rcalib in calib_runners:
+
+        cm1 = rcalib['cm_1']
+        dc1 = rcalib['dc_1']
+        cm2 = rcalib['cm_2']
+        dc2 = rcalib['dc_2']
+        P1 = rcalib['P1']
+        P2 = rcalib['P2']
+
+        # triangulated point clouds for all images
+        point_clouds = cbcalib.triangulate_impoints(P1, P2, ip_1, ip_2)
+
+        res.append(point_clouds)
+
+    return np.array(res)
+
+
 def detect_good_triangulations(res_np, target, tol):
     
     bottom = target - tol
