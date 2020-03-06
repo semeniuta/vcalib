@@ -4,7 +4,23 @@ chessboard images.
 """
 
 import numpy as np
-from .planefit import fit_plane
+from .planefit import fit_plane, plane_diff_rms
+from .distinrows import measure_cb_distances_in_rows
+
+
+def metric_plane_diff_rms(pcloud):
+
+    plane_coefs = fit_plane(pcloud)
+    return plane_diff_rms(plane_coefs, pcloud)
+
+
+def create_metric_mean_dist_in_rows(psize):
+    
+    def metric_func(pcloud):
+        distances = measure_cb_distances_in_rows(pcloud, psize)
+        return distances.mean()
+
+    return metric_func
 
 
 def apply_metric_to_all_point_clouds(triang, metric_func):
@@ -17,9 +33,8 @@ def apply_metric_to_all_point_clouds(triang, metric_func):
         for j in range(n_images):
 
             pcloud = triang[i, j]
-            plane_coefs = fit_plane(pcloud)
-
-            res[i, j] = metric_func(plane_coefs, pcloud)
+            
+            res[i, j] = metric_func(pcloud)
 
     return res
 
