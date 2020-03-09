@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from .planefit import plane_z
 
 
-def scatter_3d(pcloud):
+def scatter_3d(pcloud, **scatter_kwargs):
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -13,7 +13,7 @@ def scatter_3d(pcloud):
     y = pcloud[:, 1]
     z = pcloud[:, 2]
 
-    ax.scatter(x, y, z)
+    ax.scatter(x, y, z, **scatter_kwargs)
 
     plt.show()
 
