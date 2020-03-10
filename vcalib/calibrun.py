@@ -166,9 +166,14 @@ def triangulate_all(calib_runners, runner_prepare):
         dc2 = rcalib['dc_2']
         P1 = rcalib['P1']
         P2 = rcalib['P2']
+        R1 = rcalib['R1']
+        R2 = rcalib['R2']
+
+        ip_1_ud = [cbcalib.undistort_points(src, cm1, dc1, P1, R1) for src in ip_1]
+        ip_2_ud = [cbcalib.undistort_points(src, cm2, dc2, P2, R2) for src in ip_2]
 
         # triangulated point clouds for all images
-        point_clouds = cbcalib.triangulate_impoints(P1, P2, ip_1, ip_2)
+        point_clouds = cbcalib.triangulate_impoints(P1, P2, ip_1_ud, ip_2_ud)
 
         res.append(point_clouds)
 
