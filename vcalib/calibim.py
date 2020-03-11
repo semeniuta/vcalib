@@ -74,6 +74,22 @@ def find_best_calib_based_on_triangulations(good):
     return ngood_per_calib, best_calib_run_idx, good_image_indices_in_best_calib
 
 
+def find_best_calib_index(triang_mask):
+
+    n_good_images_per_calib = np.sum(triang_mask, axis=1)
+    return n_good_images_per_calib.argmax()
+
+
+def sort_calib_runs(triang_mask):
+    
+    n_good_images_per_calib = np.sum(triang_mask, axis=1)
+
+    zipped = zip(range(triang_mask.shape[0]), n_good_images_per_calib)
+    zipped_s = list(sorted(zipped, key=lambda el: el[1], reverse=True))
+
+    # Each row: (calib_idx, n_good_images), rows sorted by n_good_images
+    return np.array(zipped_s)
+
 def analyze_good_tringulations(good):
 
     calib_runs_with_nonzero_good = dict()
