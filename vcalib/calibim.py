@@ -90,6 +90,38 @@ def sort_calib_runs(triang_mask):
     # Each row: (calib_idx, n_good_images), rows sorted by n_good_images
     return np.array(zipped_s)
 
+
+
+def detect_bad_calibrations(triang_mask, percent_threshold):
+    """
+    Detect indices of calibrations for which the number 
+    of positive images in triang_mask is lower than 
+    the specified percentage from the total number of images.
+    """
+
+    n_good_images_per_calib = np.sum(triang_mask, axis=1)
+
+    threshold = (percent_threshold / 100.) * triang_mask.shape[1]
+
+    return [i for i, n_good in enumerate(n_good_images_per_calib) if n_good < threshold]
+
+
+def detect_bad_images(triang_mask, percent_threshold):
+    """
+    Detect indices of images that are associated 
+    with the number of positive calibration runs 
+    in triang_mask lower than the specified percentage 
+    from the total number of calibration runs.
+    """
+
+    n_good_calibs_per_image = np.sum(triang_mask, axis=0)
+
+    threshold = (percent_threshold / 100.) * triang_mask.shape[0]
+
+    return [i for i, n_good in enumerate(n_good_calibs_per_image) if n_good < threshold]
+
+
+
 def analyze_good_tringulations(good):
 
     calib_runs_with_nonzero_good = dict()
