@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from math import factorial
+from .nptutils import make_mask_from_indices
 
 
 def shuffle(x, seed=None):
@@ -48,3 +49,35 @@ def sample_subsets(elements, subset_size, n_subsets, seed):
         subset = np.random.choice(elements, subset_size, replace=False)
 
         yield subset
+
+
+def subsets_onehot(subsets, n_images):
+
+    res = np.zeros((len(subsets), n_images))
+
+    for i, ss in enumerate(subsets):
+       res[i, :] = make_mask_from_indices(n_images, ss)
+
+    return res
+
+
+def gather_image_indices_in_calib_runs(subsets, calib_indices):
+
+    res = set()
+
+    for i in calib_indices:
+        res.update(subsets[i])
+
+    return np.array(sorted(res))
+
+
+def gather_image_frequencies_in_calib_runs(subsets, calib_indices, n_images):
+
+    freq = np.zeros(n_images, dtype=int)
+
+    for i in calib_indices:
+
+        for im_idx in subsets[i]:
+            freq[im_idx] += 1
+
+    return freq
