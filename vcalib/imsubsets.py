@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from math import factorial
-from .nptutils import make_mask_from_indices
+from .nputils import make_mask_from_indices
 
 
 def shuffle(x, seed=None):
