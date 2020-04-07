@@ -207,3 +207,20 @@ def pnp_for_each_image_pair(runner_prepare, cm1, dc1, cm2, dc2):
         tvecs_2.append(t2.reshape(-1))
 
     return np.array(rvecs_1), np.array(tvecs_1), np.array(rvecs_2), np.array(tvecs_2)
+
+
+def gather_calib_params(calib_runners, token_name, indices=None):
+
+    res = []
+
+    for rcalib in calib_runners:
+
+        tk = rcalib[token_name]
+
+        if indices is None:
+            res.append(tk)
+        else:
+            vals = [tk[idx] for idx in indices]
+            res.append(vals)
+
+    return np.array(res)
