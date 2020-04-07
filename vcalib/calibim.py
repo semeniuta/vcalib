@@ -4,6 +4,7 @@ chessboard images.
 """
 
 import numpy as np
+import pandas as pd
 from .planefit import fit_plane, plane_diff_rms
 from .distinrows import measure_cb_distances_in_rows
 
@@ -166,3 +167,69 @@ def select_indices(good_counts, low_threshold=0):
         selected += good_counts[c]
 
     return selected
+
+
+def get_good_vals(metric_mat, triang_mask):
+
+    good_vals = []
+
+    for i in range(len(metric_mat)):
+
+        vals = metric_mat[i][triang_mask[i]]
+        good_vals.append(vals)
+
+    return good_vals
+
+
+def summarize_good_vals(good_vals, nominal_value):
+
+    data = {
+        'Mean': [vals.mean() for vals in good_vals],
+        'StdDev': [vals.std() for vals in good_vals],
+        'NGoodImages': [len(vals) for vals in good_vals],
+        'MaxAbsErr': [np.max(np.abs(vals - nominal_value)) for vals in good_vals],
+    }
+
+    return pd.DataFrame(data)
+
+
+def create_good_vals_histograms(good_vals, nominal_value):
+
+    def num_in_range(vals, lo, hi=None):
+        err = np.abs(vals - nominal_value)
+
+        if hi is None:
+            match = (err >= lo)
+        else:
+            match = (err >= lo) & (err < hi)
+
+        return np.sum(match)
+
+    def build_hist(vals):
+
+        delta = 0.1
+
+        hist = []
+        for i in range(10):
+            lo = delta * i
+            hi = delta * (i + 1)
+            hist.append(num_in_range(vals, lo, hi))
+
+        hist.append(num_in_range(vals, 1.))
+
+        return hist
+
+    histograms = np.array([build_hist(vals) for vals in good_vals])
+
+    return histograms
+
+
+def augment_df_good_vals_with_hist(df_good_vals, histograms):
+
+    df = df_good_vals.copy()
+
+    for j in range(histograms.shape[1]):
+        name = 'Hist{}'.format(j)
+        df[name] = histograms[:, j]
+
+    return df
