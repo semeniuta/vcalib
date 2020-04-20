@@ -59,6 +59,23 @@ def sample_subsets(elements, subset_size, n_subsets, seed):
     return np.array(list(gen()))
 
 
+def sample_subsets_different_size(elements, min_subset_size, max_subset_size, n_subsets, seed):
+
+    def gen():
+
+        np.random.seed(seed)
+        seeds = np.random.randint(0, 100 * n_subsets, n_subsets)
+        sizes = np.random.randint(min_subset_size, max_subset_size, n_subsets)
+
+        for subset_seed, subset_size in zip(seeds, sizes):
+            np.random.seed(subset_seed)
+            subset = np.random.choice(elements, subset_size, replace=False)
+
+            yield subset
+
+    return list(gen())
+
+
 def subsets_onehot(subsets, n_images):
 
     res = np.zeros((len(subsets), n_images))
