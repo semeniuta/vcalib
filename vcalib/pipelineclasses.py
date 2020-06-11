@@ -55,12 +55,29 @@ class MeanDistInRows:
         metric_func = create_metric_mean_dist_in_rows(psize=ps)
 
         self.metric_mat = apply_metric_to_all_point_clouds(calib_triang.triang, metric_func)
+
         
 class ValuesAroundTarget:
 
     def __init__(self, metric_mat, target, tol):
 
         self.mask = detect_good_triangulations(metric_mat, target, tol)
+        
+        good_vals = get_good_vals(metric_mat, self.mask)
+        good_vals_df = summarize_good_vals(good_vals, nominal_value=target)
+        good_vals_hist = create_good_vals_histograms(good_vals, nominal_value=target)
+        
+        self.df = augment_df_good_vals_with_hist(good_vals_df, good_vals_hist)
+
+    def df_sorted(self):
+        return self.df.sort_values(['Hist0', 'MaxAbsErr'], ascending=[False, True])
+
+
+class MaskedValues:
+
+    def __init__(self, metric_mat, target, mask):
+
+        self.mask = mask
         
         good_vals = get_good_vals(metric_mat, self.mask)
         good_vals_df = summarize_good_vals(good_vals, nominal_value=target)
