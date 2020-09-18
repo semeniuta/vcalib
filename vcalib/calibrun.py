@@ -6,12 +6,13 @@ import pandas as pd
 from glob import glob
 import itertools
 
-from visioncg.io import sorted_glob
-from visioncg import cbcalib
-from visioncg import geometry
+from visionfuncs.io import sorted_glob
+from visionfuncs import cbcalib
+from visionfuncs import geometry
 from epypes.compgraph import CompGraphRunner
 
 from .io import open_images_all
+from .graph import CGCalibrateStereoBase
 
 
 def prepare_points_for_all_images(runner_prepare, imfiles_1, imfiles_2):
@@ -27,7 +28,7 @@ def prepare_points_for_all_images(runner_prepare, imfiles_1, imfiles_2):
 
 def create_runner_calib(im_wh):
     
-    cg_calib = cbcalib.CGCalibrateStereoBase()
+    cg_calib = CGCalibrateStereoBase()
     params_calib = {'im_wh': im_wh}
 
     return CompGraphRunner(cg_calib, params_calib)
