@@ -1,6 +1,6 @@
 import cv2
 
-from visioncg.io import open_image
+from visionfuncs.io import open_image
 
 
 def open_images_all(imfiles):
