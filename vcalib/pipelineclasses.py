@@ -1,4 +1,4 @@
-from visioncg import cbcalib
+from visionfuncs import cbcalib
 from epypes.compgraph import CompGraphRunner
 from .imsubsets import shuffle
 from .calibrun import prepare_points_for_all_images
@@ -11,6 +11,7 @@ from .calibim import summarize_good_vals
 from .calibim import get_good_vals
 from .calibim import create_good_vals_histograms
 from .calibim import augment_df_good_vals_with_hist
+from .graph import CGPreparePointsStereo
 
 
 class CalibrationInput:
@@ -20,7 +21,7 @@ class CalibrationInput:
         self.pattern_size = psize
         self.square_size = sqsize
 
-        cg = cbcalib.CGPreparePointsStereo()
+        cg = CGPreparePointsStereo()
         params = {'pattern_size_wh': psize, 'square_size': sqsize}
 
         self.runner_prepare = CompGraphRunner(cg, params)
