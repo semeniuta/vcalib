@@ -183,11 +183,17 @@ def get_good_vals(metric_mat, triang_mask):
 
 def summarize_good_vals(good_vals, nominal_value):
 
+    def not_empty(vals):
+        return len(vals) > 0
+
+    def compute_max_abs_err(vals):
+        return np.max(np.abs(vals - nominal_value))
+
     data = {
-        'Mean': [vals.mean() for vals in good_vals],
-        'StdDev': [vals.std() for vals in good_vals],
+        'Mean': [vals.mean() if not_empty(vals) else np.nan for vals in good_vals],
+        'StdDev': [vals.std() if not_empty(vals) else np.nan for vals in good_vals],
         'NGoodImages': [len(vals) for vals in good_vals],
-        'MaxAbsErr': [np.max(np.abs(vals - nominal_value)) for vals in good_vals],
+        'MaxAbsErr': [compute_max_abs_err(vals) if not_empty(vals) else np.nan for vals in good_vals],
     }
 
     return pd.DataFrame(data)
