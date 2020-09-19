@@ -239,3 +239,26 @@ def augment_df_good_vals_with_hist(df_good_vals, histograms):
         df[name] = histograms[:, j]
 
     return df
+
+
+def gather_accuracy_measurements(triang, df, image_pair_index, n_first, nominal, psize):
+
+    indices = df.index[:n_first]
+
+    means = []
+    stddevs = []
+
+    for calib_index in indices:
+
+        ptcloud = triang[calib_index, image_pair_index]
+
+        distances = measure_cb_distances_in_rows(ptcloud, pattern_size=psize)
+
+        means.append(np.mean(distances))
+        stddevs.append(np.std(distances))
+
+    data = {'Mean': means, 'StdDev': stddevs}
+    df_acc = pd.DataFrame(data, index=indices)
+    df_acc['MeanDeviation'] = np.abs(df_acc['Mean'] - nominal)
+
+    return df_acc
